@@ -3,22 +3,13 @@ import math
 import random
 
 pygame.init()
+
 window = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 running = True
 
-
-
-
 # left to do *******
 # collide bullet with enemy method, add fuel system, plus point system, start screen?, start background
-
-
-
-
-
-
-
 
 # region of variables
 global start_pos_x
@@ -44,7 +35,6 @@ tip_height = (shaft_height / 2)
 global player_surface_x
 global player_surface_y
 global player_surface
-global player_radius
 
 player_surface_x = 35
 player_surface_y = 55
@@ -260,11 +250,16 @@ class Enemy:
         distance_x = self.center_x - closest_x
         distance_y = self.center_y - closest_y
 
-        distance = math.sqrt(distance_x * distance_x + distance_y * distance_y)
+        distance = math.sqrt(distance_x**2 + distance_y**2)
 
         if distance <= self.radius:
             return True
         else: return False
+
+    def take_damage(self, bullet):
+        self.durability -= bullet.damage
+        if self.durability <= 0:
+            enemies.remove(enemy)
 
 class Bullet:
     def __init__(self, x, y, angle):
@@ -274,13 +269,12 @@ class Bullet:
         self.bullet_speed = 500
         self.velocity_x = 0
         self.velocity_y = 0
-        self.width = 5
-        self.height = 5
+        self.radius = 2.5
         self.damage = 5
       
 
     def spawn_bullet(self):
-        pygame.draw.rect(window, "white", (self.x, self.y, self.width, self.height))
+        pygame.draw.circle(window, "white", (self.x, self.y), self.radius)
 
     def move_bullet(self):
 
@@ -290,10 +284,18 @@ class Bullet:
         self.x += self.velocity_x * dt
         self.y += self.velocity_y * dt 
 
-        print(self.velocity_x, self.velocity_y)
+    def collide_with_enemy(self, enemy):
+        distance = math.sqrt((self.x - enemy.center_x)**2 + (self.y - enemy.center_y)**2)
 
-    def collide_with_enemy(self):
-        pass
+        if distance <= self.radius + enemy.radius:
+            return True
+        else: return False
+
+    def leave_boundary(self):
+        if self.x >= 1282.5 or self.x <= -2.5:
+            bullets.remove(self)
+        if self.y >= 722.5 or self.y <= -2.5:
+            bullets.remove(self)
 
 global game_paused
 game_paused = False
@@ -311,10 +313,12 @@ while running is True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    
-        if event.type == pygame.KEYDOWN:
+
+        elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 game_paused = not game_paused
+            elif event.key == pygame.K_SPACE and not game_paused and len(bullets) < 10:
+                bullets.append(Bullet(start_pos_x, player_rect.top, angle))
 
     dt = clock.tick(60) / 1000
 
@@ -327,7 +331,7 @@ while running is True:
             spawn_time += dt
 
             if len(enemies) < 20 and spawn_time > .5:
-                enemies.append(Enemy(random.randrange(40, 1280), random.randrange(-75, 805, 820), random_score_amount, random_score_amount * 5, random_score_amount))
+                enemies.append(Enemy(random.randrange(40, 1280), random.randrange(-75, 805, 820), random_score_amount, random_score_amount, random_score_amount))
                 spawn_time = 0
 
             window.fill("black")
@@ -343,20 +347,21 @@ while running is True:
             
             boundary(player_rect)
 
-            if press_keys[pygame.K_SPACE] and len(bullets) < 1:
-                bullets.append(Bullet(start_pos_x, player_rect.top, angle))
-
             for bullet in bullets:
                 bullet.move_bullet()
                 bullet.spawn_bullet()
-            
+                bullet.leave_boundary()
+                for enemy in enemies:
+                    if bullet.collide_with_enemy(enemy) == True:
+                        enemy.take_damage(bullet)
+                        bullets.remove(bullet)
+                            
             for enemy in enemies:
                 enemy.move_enemy()
                 enemy.boundary()
                 enemy.spawn_enemy()
                 if enemy.colliding_with_player() == True:
                     game_lost = True
-
             
             for self in range(len(enemies)):
                 for enemy in range(self + 1, len(enemies)):
