@@ -306,7 +306,6 @@ game_lost = False
 enemies = []
 bullets = []
 
-# this is a test commit and pull and push
 
 global spawn_time
 spawn_time = 0
