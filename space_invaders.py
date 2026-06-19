@@ -238,7 +238,7 @@ def start_screen():
 
     line1 = start_font.render("Welcome to Spenis Invaders", True, (255, 255, 255))
     line2 = control_display_font.render("Controls:", True, (255, 255, 255))
-    line3 = control_font.render("WASD to move", True, (255, 255, 255))
+    line3 = control_font.render("W/S to move, A/D to Turn", True, (255, 255, 255))
     line4 = control_font.render("Space to Shoot", True, (255, 255, 255))
     line5 = control_font.render("ESC to Pause", True, (255, 255, 255))
     line6 = control_font.render("Good Luck!", True, (255, 255, 255))
@@ -246,10 +246,10 @@ def start_screen():
 
     window.blit(line1, (225, 100))
     window.blit(line2, (550, 200))
-    window.blit(line3, (575, 280))
+    window.blit(line3, (525, 280))
     window.blit(line4, (575, 360))
     window.blit(line5, (580, 440))
-    window.blit(line6, (600, 540))
+    window.blit(line6, (595, 540))
     window.blit(line7, (620, 600))
 
 def display_score():
@@ -257,7 +257,7 @@ def display_score():
 
     score_font = pygame.font.SysFont("Corbel", 50)
     score_display = score_font.render(f"Score: {int(score)}", True, (255, 255, 255))
-    window.blit(score_display, (400, 25))
+    window.blit(score_display, (375, 25))
 
 def display_max_score():
     global score
@@ -412,7 +412,7 @@ while running is True:
             if event.key == pygame.K_ESCAPE:
                 game_paused = not game_paused
             elif event.key == pygame.K_SPACE and not game_paused and len(bullets) < 10:
-                bullets.append(Bullet(start_pos_x, player_rect.top, angle))
+                bullets.append(Bullet(start_pos_x, start_pos_y, angle))
 
             if event.key == pygame.K_g:
                 game_begin = True
