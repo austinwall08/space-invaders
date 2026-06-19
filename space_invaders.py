@@ -8,9 +8,6 @@ window = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 running = True
 
-# left to do *******
-# collide bullet with enemy method, add fuel system, plus point system, start screen?, start background
-
 # region of variables
 global start_pos_x
 global start_pos_y
@@ -42,6 +39,14 @@ player_surface = pygame.Surface((player_surface_x, player_surface_y), pygame.SRC
 
 global angle
 angle = 0
+
+global fuel
+fuel = 100
+
+global accel_x
+accel_x = 0
+global accel_y
+accel_y = 0
 # endregion
 
 def draw_player():
@@ -162,17 +167,21 @@ def boundary(player_rect):
 def inertia():
     global velocity_x, velocity_y
     global start_pos_x, start_pos_y
-    accel_x = 0
-    accel_y = 0
+    global fuel
+    global accel_x, accel_y
     acceleration = 100
 
-    if press_keys[pygame.K_w]:
-        accel_x -= math.sin(math.radians(angle)) * acceleration
-        accel_y -= math.cos(math.radians(angle)) * acceleration
+    accel_x = 0
+    accel_y = 0
+ 
+    if fuel > 0:
+        if press_keys[pygame.K_w]:
+            accel_x -= math.sin(math.radians(angle)) * acceleration
+            accel_y -= math.cos(math.radians(angle)) * acceleration
 
-    if press_keys[pygame.K_s]:
-        accel_x += math.sin(math.radians(angle)) * acceleration
-        accel_y += math.cos(math.radians(angle)) * acceleration 
+        if press_keys[pygame.K_s]:
+            accel_x += math.sin(math.radians(angle)) * acceleration
+            accel_y += math.cos(math.radians(angle)) * acceleration 
 
     velocity_x += accel_x * dt
     velocity_y += accel_y * dt
@@ -182,7 +191,7 @@ def inertia():
     draw_player()
 
 def reset_game():
-    global start_pos_x, start_pos_y, angle, velocity_x, velocity_y, spawn_time
+    global start_pos_x, start_pos_y, angle, velocity_x, velocity_y, spawn_time, fuel
 
     enemies.clear()
     bullets.clear()
@@ -192,6 +201,23 @@ def reset_game():
     velocity_x = 0
     velocity_y = 0
     spawn_time = 0
+    fuel = 100
+
+def fuel_system():
+    global fuel, accel_x, accel_y
+
+    if fuel <= 0:
+        fuel = 0
+        fuel_out_font = pygame.font.SysFont("stencil", 35)
+        fuel_out_text_surface = fuel_out_font.render("FUEL IS OUT, SHOOT ASTEROIDS TO GET MORE", True, ("Red"))
+        window.blit(fuel_out_text_surface, (1280/4.5, 720/2))
+    elif accel_x != 0 or accel_y != 0:
+        fuel -= 100 * dt
+    fuel_font = pygame.font.SysFont("segoeuisemilight", 35)
+    fuel_text_surface = fuel_font.render(f"Fuel: {int(fuel)}", True, (255, 255, 255))
+    window.blit(fuel_text_surface, (1100, 620))
+
+    return fuel
 
 class Enemy:
 
@@ -293,9 +319,13 @@ class Bullet:
 
     def leave_boundary(self):
         if self.x >= 1282.5 or self.x <= -2.5:
-            bullets.remove(self)
+            if bullet in bullets:
+                bullets.remove(self)
         if self.y >= 722.5 or self.y <= -2.5:
-            bullets.remove(self)
+            if bullet in bullets:
+                bullets.remove(self)
+
+all_fonts = pygame.font.get_fonts()
 
 global game_paused
 game_paused = False
@@ -326,7 +356,7 @@ while running is True:
     if game_lost == False:
 
         if game_paused == False:
-            
+
             random_score_amount = random.randrange(5, 21)
 
             spawn_time += dt
@@ -355,7 +385,8 @@ while running is True:
                 for enemy in enemies:
                     if bullet.collide_with_enemy(enemy) == True:
                         enemy.take_damage(bullet)
-                        bullets.remove(bullet)
+                        if bullet in bullets:
+                            bullets.remove(bullet)
                             
             for enemy in enemies:
                 enemy.move_enemy()
@@ -367,6 +398,8 @@ while running is True:
             for self in range(len(enemies)):
                 for enemy in range(self + 1, len(enemies)):
                     enemies[self].enemy_collision(enemies[enemy])
+
+            fuel_system()
             
             pygame.display.flip()
 
@@ -405,6 +438,8 @@ while running is True:
         if pygame.key.get_pressed()[pygame.K_RETURN]:
             game_lost = False
             reset_game()
+
+        
         pygame.display.flip()
     
 pygame.quit()
