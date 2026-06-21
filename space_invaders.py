@@ -4,7 +4,7 @@ import random
 
 pygame.init()
 
-window = pygame.display.set_mode((1280, 720))
+window = pygame.display.set_mode((1280, 720), pygame.FULLSCREEN)
 clock = pygame.time.Clock()
 running = True
 
@@ -243,6 +243,7 @@ def start_screen():
     line5 = control_font.render("ESC to Pause", True, (255, 255, 255))
     line6 = control_font.render("Good Luck!", True, (255, 255, 255))
     line7 = start_game_font.render("(G to Start)", True, (255, 255, 255))
+    line8 = start_game_font.render("(F to Toggle Full Screen)", True, (255, 255, 255))
 
     window.blit(line1, (225, 100))
     window.blit(line2, (550, 200))
@@ -251,6 +252,7 @@ def start_screen():
     window.blit(line5, (580, 440))
     window.blit(line6, (595, 540))
     window.blit(line7, (620, 600))
+    window.blit(line8, (590, 640))
 
 def display_score():
     global score
@@ -417,6 +419,9 @@ while running is True:
             if event.key == pygame.K_g:
                 game_begin = True
 
+            if event.key == pygame.K_f:
+                pygame.display.toggle_fullscreen()
+
     dt = clock.tick(60) / 1000
     window.fill("black")
 
@@ -516,6 +521,6 @@ while running is True:
                 reset_game()
 
     pygame.display.flip()
-    
+
 pygame.quit()
 
